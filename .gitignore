@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+dist/
+.context/
+test-results/
+playwright-report/
+.gstack/
+*.tsbuildinfo
+artifacts/prototype/*.log

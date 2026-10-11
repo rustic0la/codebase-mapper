@@ -1,0 +1,16 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  TASK["task.json<br/>задача и критерии со стабильными ID"] --> VALIDATE
+  AGENT["agent-evidence.json<br/>заявленные команды и результаты"] --> VALIDATE
+  CI["ci-results.json<br/>результаты настроенного pipeline"] --> VALIDATE
+  VALIDATE["evidence/read.ts + contracts/evidence.ts<br/>версии, поля, ссылки на ID"] --> NORMALIZE
+  NORMALIZE["evidence/normalize.ts<br/>единые CheckResult и ArtifactRef"] --> ORIGIN
+  ORIGIN["evidence/provenance.ts<br/>заявлено / привязано к источнику CI"] --> MATCH
+  CONTEXT["RunContext<br/>текущий снимок и источник запуска"] --> ORIGIN
+  CONTEXT --> MATCH
+  MATCH["evidence/snapshot.ts<br/>тот же SHA / другой / неизвестен"] --> INTEGRITY
+  ARTIFACTS["Каталог вложений<br/>логи, скриншоты, результаты"] --> INTEGRITY
+  INTEGRITY["evidence/artifacts.ts<br/>наличие, пути внутри пакета, хеши"] --> LINK
+  LINK["evidence/criteria.ts<br/>критерий → проверки → материалы"] --> ASSESS
+  ASSESS["evidence/assess.ts<br/>результат + источник + актуальность<br/>не хватает материалов / нужен разбор"] --> RESULT
+  RESULT["EvidenceAssessment<br/>данные отчёта без графа зависимостей"]

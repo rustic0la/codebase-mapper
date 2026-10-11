@@ -1,0 +1,20 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  LOCAL["Локальный запуск<br/>пути, режим, каталог вывода"] --> CLI
+  CI["GitHub Actions<br/>снимки и метаданные запуска"] --> CLI
+  CLI["cli/args.ts<br/>прочитать аргументы"] --> VALIDATE
+  CONFIG["cli/config.ts<br/>область анализа и настройки"] --> VALIDATE
+  VALIDATE["contracts/input.ts<br/>проверить формат и сочетания"] --> CONTEXT
+  VALIDATE -->|"ошибка входа"| ERROR
+  CONTEXT["application/context.ts<br/>RunContext: SHA, пути, run ID"] --> RUN
+  RUN["application/run.ts<br/>выбрать независимые модули"] -->|"анализ включён"| ANALYSIS
+  RUN -->|"переданы материалы"| EVIDENCE
+  RUN -->|"зафиксировать выключенные модули"| ASSEMBLE
+  ANALYSIS["analysis/analyze.ts<br/>AnalysisResult"] --> ASSEMBLE
+  EVIDENCE["evidence/assess.ts<br/>EvidenceAssessment"] --> ASSEMBLE
+  ASSEMBLE["report/assemble.ts<br/>ReportData + диагностики"] --> WRITE
+  WRITE["report/write.ts<br/>JSON, Markdown, HTML, вложения"] --> EXIT
+  RUN -->|"неустранимый сбой"| ERROR
+  WRITE -->|"ошибка записи"| ERROR
+  ERROR["cli/errors.ts<br/>код, причина, доступные диагностики"] --> EXIT
+  EXIT["cli/exit.ts<br/>exit code + краткий вывод"]

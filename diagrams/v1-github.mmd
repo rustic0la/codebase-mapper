@@ -1,0 +1,16 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  EVENT["pull_request<br/>opened / synchronize / reopened"] --> CONTEXT
+  CONTEXT["Шаг: подготовка входа<br/>base SHA, head SHA, PR, run ID"] --> REPO
+  CONTEXT -->|"только proof of work: чтение кода не нужно"| TOOL
+  REPO["Шаг: получить снимки<br/>история для merge-base; код только читается"] --> TOOL
+  TOOL["Шаг: подготовить нашу CLI<br/>зафиксированная версия инструмента"] --> CLI
+  RESULTS["Существующий процесс проверок<br/>выполнен по настройкам проекта"] --> EVIDENCE
+  EVIDENCE["Адаптер результатов<br/>ci-results.json + вложения"] --> CLI
+  CLI["Шаг: запустить нашу команду<br/>анализ и/или proof of work"] --> OUTPUT
+  OUTPUT["report/ + exit code<br/>включая доступные диагностики"] --> SUMMARY
+  OUTPUT --> UPLOAD
+  SUMMARY["Шаг: job summary<br/>содержимое summary.md"]
+  UPLOAD["Шаг: upload artifact<br/>каталог отчёта; попытка и head SHA"] --> ARTIFACT
+  ARTIFACT["Artifact запуска Actions<br/>скачиваемый каталог"] --> VIEW
+  VIEW["Ревьюер<br/>скачать → show-report → изучить"]

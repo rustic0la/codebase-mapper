@@ -1,0 +1,22 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  INPUT["ReportData<br/>контекст, диагностики, доступные модули"] --> VALIDATE
+  VALIDATE["contracts/report.ts<br/>проверить единый контракт"] --> JSON
+  VALIDATE --> MARKDOWN
+  VALIDATE --> HTML
+  VALIDATE --> FILES
+  JSON["report/json.ts<br/>машиночитаемый результат"] --> JSONFILE
+  JSONFILE["report.json"]
+  MARKDOWN["report/markdown.ts<br/>краткая сводка PR"] --> MDFILE
+  MDFILE["summary.md"]
+  HTML["report/html.ts<br/>шаблон + безопасно встроенные данные"] --> MAP
+  HTML --> PROOF
+  HTML --> WARNINGS
+  MAP["report/assets/map.js<br/>выбор узла, связи, поиск<br/>только при наличии анализа"] --> DIRECTORY
+  PROOF["report/assets/evidence.js<br/>критерии, статусы, просмотр материалов<br/>работает без карты"] --> DIRECTORY
+  WARNINGS["report/assets/diagnostics.js<br/>ошибки, пропуски, неполные данные"] --> DIRECTORY
+  FILES["report/copy-artifacts.ts<br/>перенести вложения по manifest"] --> DIRECTORY
+  JSONFILE --> DIRECTORY
+  MDFILE --> DIRECTORY
+  DIRECTORY["Каталог отчёта<br/>JSON + Markdown + HTML<br/>assets + attachments"] --> OPEN
+  OPEN["cli/show-report.ts<br/>локально раздать каталог и открыть браузер"]

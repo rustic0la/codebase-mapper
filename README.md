@@ -1,12 +1,12 @@
 # Codebase Mapper
 
-Консольная утилита для анализа pull request и генерации переносимого отчёта с картой зависимостей и материалами работы агента. Проект развивается небольшими шагами; текущий PR добавляет основу обработки данных.
+A command-line tool for analyzing pull requests and generating portable reports with a dependency map and evidence of an agent's work. The project develops in small steps; the current PR adds the data processing foundation.
 
-Сейчас реализованы чтение JSON, проверка входного пакета, сборка статистики и Markdown-сводка со ссылками на исходники GitHub. Исполняемая CLI, запись `report.json`/`summary.md`, парсер исходников, HTML-карта и GitHub Actions для анализа PR ещё не реализованы.
+JSON reading, input package validation, summary statistics, and a Markdown summary with GitHub source links are implemented. The executable CLI, writing `report.json`/`summary.md`, source parser, HTML map, and GitHub Actions workflow for PR analysis are not implemented yet.
 
-## Разработка
+## Development
 
-Нужны Node.js 20.19+ и pnpm 10.15.1.
+Requires Node.js 20.19+ and pnpm 10.15.1.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -16,19 +16,19 @@ pnpm build
 pnpm format:check
 ```
 
-`pnpm build` компилирует модули из `src/` в `dist/`. Это сборка модулей, а не запуск готовой CLI. Тесты покрывают реализованные контракты, чтение JSON и функции отчёта; CLI-проверки будут добавлены после реализации команды.
+`pnpm build` compiles modules from `src/` into `dist/`. It builds the modules rather than running a finished CLI. Tests cover the implemented contracts, JSON reading, and report functions; CLI checks will be added once the command is implemented.
 
-## Модули
+## Modules
 
-| Функция          | Контракт                    | Назначение                                                              |
-| ---------------- | --------------------------- | ----------------------------------------------------------------------- |
-| `reportJson`     | `string → Promise<unknown>` | Читает JSON; ошибки чтения и разбора передаются вызывающему коду        |
-| `checkInput`     | `unknown → InputPackage`    | Проверяет структуру, значения полей, ID и ссылки между файлами          |
-| `createReport`   | `InputPackage → ReportData` | Упорядочивает файлы и связи, добавляет счётчики                         |
-| `renderMarkdown` | `ReportData → string`       | Формирует сводку со снимками, связями, ограничениями и предупреждениями |
+| Function         | Contract                    | Purpose                                                                  |
+| ---------------- | --------------------------- | ------------------------------------------------------------------------ |
+| `reportJson`     | `string → Promise<unknown>` | Reads JSON; propagates read and parse errors to the caller               |
+| `checkInput`     | `unknown → InputPackage`    | Validates the structure, field values, IDs, and references between files |
+| `createReport`   | `InputPackage → ReportData` | Sorts files and edges and adds counts                                    |
+| `renderMarkdown` | `ReportData → string`       | Generates a summary with snapshots, edges, limitations, and warnings     |
 
-Входной формат версии `1` включает HTTP(S) URL репозитория, два 40-символьных Git SHA, файлы с относительными путями через `/`, связи, область анализа и предупреждения. Type-only связи учитываются отдельно. Ссылки Markdown используют структуру GitHub `/blob/<head SHA>/<path>#L<line>`; другие хостинги пока не поддержаны репортером.
+Input format version `1` includes an HTTP(S) repository URL, two 40-character Git SHAs, files with relative paths using `/`, edges, analysis scope, and warnings. Type-only edges are counted separately. Markdown links use GitHub's `/blob/<head SHA>/<path>#L<line>` structure; the reporter does not support other hosts yet.
 
-Валидация пакета не подтверждает наличие импортов в исходниках, выполнение тестов анализируемого проекта или достижение критериев задачи. Тестовые пакеты синтетические. Утилита не выполняет команды из импортированных данных.
+Package validation does not confirm that imports exist in the source, that tests of the analyzed project ran, or that task criteria were met. Test packages are synthetic. The tool does not execute commands from imported data.
 
-План законченной V1 находится в [PLAN.md](./PLAN.md), подробные схемы — в [diagrams/README.md](./diagrams/README.md), ближайший CLI-сценарий — в [specs/001-review-prototype.md](./specs/001-review-prototype.md). Правила совместной работы — в [AGENTS.md](./AGENTS.md), заметки о проверках и proof of work — в [WORKSHOP-NOTES.md](./WORKSHOP-NOTES.md).
+The complete V1 plan is in [PLAN.md](./PLAN.md), detailed diagrams are in [diagrams/README.md](./diagrams/README.md), and the next CLI scenario is in [specs/001-review-prototype.md](./specs/001-review-prototype.md). Collaboration rules are in [AGENTS.md](./AGENTS.md), and notes on verification and proof of work are in [WORKSHOP-NOTES.md](./WORKSHOP-NOTES.md).

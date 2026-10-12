@@ -1,16 +1,16 @@
 %%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
 flowchart TD
-  TASK["task.json<br/>задача и критерии со стабильными ID"] --> VALIDATE
-  AGENT["agent-evidence.json<br/>заявленные команды и результаты"] --> VALIDATE
-  CI["ci-results.json<br/>результаты настроенного pipeline"] --> VALIDATE
-  VALIDATE["evidence/read.ts + contracts/evidence.ts<br/>версии, поля, ссылки на ID"] --> NORMALIZE
-  NORMALIZE["evidence/normalize.ts<br/>единые CheckResult и ArtifactRef"] --> ORIGIN
-  ORIGIN["evidence/provenance.ts<br/>заявлено / привязано к источнику CI"] --> MATCH
-  CONTEXT["RunContext<br/>текущий снимок и источник запуска"] --> ORIGIN
+  TASK["task.json<br/>task and criteria with stable IDs"] --> VALIDATE
+  AGENT["agent-evidence.json<br/>declared commands and results"] --> VALIDATE
+  CI["ci-results.json<br/>configured pipeline results"] --> VALIDATE
+  VALIDATE["evidence/read.ts + contracts/evidence.ts<br/>versions, fields, ID references"] --> NORMALIZE
+  NORMALIZE["evidence/normalize.ts<br/>normalized CheckResult and ArtifactRef"] --> ORIGIN
+  ORIGIN["evidence/provenance.ts<br/>declared / bound to a CI source"] --> MATCH
+  CONTEXT["RunContext<br/>current snapshot and run origin"] --> ORIGIN
   CONTEXT --> MATCH
-  MATCH["evidence/snapshot.ts<br/>тот же SHA / другой / неизвестен"] --> INTEGRITY
-  ARTIFACTS["Каталог вложений<br/>логи, скриншоты, результаты"] --> INTEGRITY
-  INTEGRITY["evidence/artifacts.ts<br/>наличие, пути внутри пакета, хеши"] --> LINK
-  LINK["evidence/criteria.ts<br/>критерий → проверки → материалы"] --> ASSESS
-  ASSESS["evidence/assess.ts<br/>результат + источник + актуальность<br/>не хватает материалов / нужен разбор"] --> RESULT
-  RESULT["EvidenceAssessment<br/>данные отчёта без графа зависимостей"]
+  MATCH["evidence/snapshot.ts<br/>same SHA / different / unknown"] --> INTEGRITY
+  ARTIFACTS["Attachments directory<br/>logs, screenshots, results"] --> INTEGRITY
+  INTEGRITY["evidence/artifacts.ts<br/>presence, contained paths, hashes"] --> LINK
+  LINK["evidence/criteria.ts<br/>criterion → checks → evidence"] --> ASSESS
+  ASSESS["evidence/assess.ts<br/>outcome + origin + freshness<br/>missing evidence / review required"] --> RESULT
+  RESULT["EvidenceAssessment<br/>report data without a dependency graph"]

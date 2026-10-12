@@ -1,63 +1,63 @@
-# Устройство первой версии
+# First-version architecture
 
-Это предлагаемая архитектура законченной первой версии CLI, а не список уже реализованных модулей. Текущий первый шаг из `specs/001-review-prototype.md` остаётся меньше: проверить контрольный JSON и сформировать JSON/Markdown. Названия файлов ниже нужны для обсуждения будущих границ ответственности; текущие модули перечислены в [README.md](../README.md).
+This is the proposed architecture of the complete first CLI version, rather than a list of modules already implemented. The current first step in `specs/001-review-prototype.md` remains smaller: validate the reference JSON and generate JSON/Markdown. The filenames below help us discuss future responsibilities; current modules are listed in [README.md](../README.md).
 
-Первая версия имеет два независимых пути: анализ зависимостей и proof of work. Можно создать отчёт только по материалам работы агента, только по графу или по обоим. Выключенный модуль явно отмечен как выключенный. Пустой или неудавшийся анализ не выдаётся за отсутствие зависимостей.
+The first version has two independent paths: dependency analysis and proof of work. A report can use only the agent's work materials, only the graph, or both. A disabled module is explicitly marked as disabled. Empty or failed analysis is never presented as an absence of dependencies.
 
-## Схемы
+## Diagrams
 
-1. [CLI и управление запуском](./v1-cli.svg) — [Mermaid](./v1-cli.mmd).
-2. [Анализ исходников и граф](./v1-analysis.svg) — [Mermaid](./v1-analysis.mmd).
+1. [CLI and run control](./v1-cli.svg) — [Mermaid](./v1-cli.mmd).
+2. [Source analysis and graph](./v1-analysis.svg) — [Mermaid](./v1-analysis.mmd).
 3. [Proof of work](./v1-evidence.svg) — [Mermaid](./v1-evidence.mmd).
-4. [Генерация и просмотр отчёта](./v1-report.svg) — [Mermaid](./v1-report.mmd).
+4. [Report generation and viewing](./v1-report.svg) — [Mermaid](./v1-report.mmd).
 5. [GitHub Actions](./v1-github.svg) — [Mermaid](./v1-github.mmd).
 
-В Git хранятся описания, исходники Mermaid и SVG для просмотра. Локальные PNG и Excalidraw перенесены в `.context/diagrams/`; этот каталог не входит в Git.
+Descriptions, Mermaid sources, and SVG previews are stored in Git. Local PNG and Excalidraw files have been moved to `.context/diagrams/`; that directory is excluded from Git.
 
-Стрелки означают передачу данных или последовательность шагов. Параллельные ветви в схеме не требуют параллельного исполнения. Отдельная рамка или файл обозначает обязанность внутри одной утилиты, а не отдельный сервис.
+Arrows represent data flow or a sequence of steps. Parallel branches in a diagram do not require parallel execution. A separate box or file represents a responsibility within one utility, rather than a separate service.
 
-## Входы и выходы модулей
+## Module inputs and outputs
 
-| Модуль                                     | Вход                                               | Выход и проверяемая обязанность                                                                                                                          |
-| ------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cli/args.ts`, `config.ts`                 | Аргументы, конфигурация                            | Режим, пути, ограничения. Проверить сочетания аргументов и пути; команды интерфейса ещё обсуждаем                                                        |
-| `application/context.ts`                   | Явные SHA/снимки, метаданные CI                    | `RunContext`: идентификатор запуска, область, версия инструмента, снимки и их происхождение. Для proof of work без графа читать Git-историю не требуется |
-| `git/snapshots.ts`, `changes.ts`           | Доступный локальный Git                            | Merge-base, head и изменения файлов. Определять PR-изменения от merge-base до head; сохранять также исходный base SHA                                    |
-| `analysis/scan.ts`, `scope.ts`             | Два снимка и правила области                       | Отобранные исходники и список исключений. До выполнения зафиксировать расширения, лимиты и обработку ссылок                                              |
-| `analysis/parse.ts`, `imports.ts`          | Текст файла и язык                                 | Обнаруженные конструкции с исходными путями, строками и видом связи; вычисляемые пути не становятся придуманными рёбрами                                 |
-| `analysis/resolve.ts`, `classify.ts`       | Конструкция и явно поддержанные правила путей      | Внутренний файл, внешняя зависимость, намеренное исключение или unresolved с причиной. Правила Flow и монорепозитория React проверять отдельно           |
-| `graph/*`                                  | Файлы и подтверждённые рёбра                       | Индексы обеих направлений, сравнение, циклы и потенциальная область влияния с ограничением глубины. Type-only и runtime учитывать раздельно              |
-| `evidence/read.ts`, `normalize.ts`         | Задача, пакет агента, нормализованный результат CI | Критерии, проверки и ссылки на вложения в общем формате. Проверить версии схем, уникальность ID и перекрёстные ссылки                                    |
-| `evidence/provenance.ts`                   | Результат проверки и контекст запуска              | Отдельное происхождение: заявление агента, запись сборщика, привязка к CI. Просто строка `source: ci` в JSON остаётся заявлением                         |
-| `evidence/snapshot.ts`, `artifacts.ts`     | SHA/манифест и вложения                            | Актуальность и целостность. Отсутствующий SHA — неизвестная актуальность. Хеш подтверждает целостность, не честность источника                           |
-| `evidence/criteria.ts`, `assess.ts`        | Критерии и проверенные ссылки на материалы         | Какие материалы связаны с критерием, какие отсутствуют или устарели. Успешная команда не принимает задачу автоматически                                  |
-| `report/assemble.ts`                       | Контекст, доступные результаты, диагностики        | `ReportData`: единый результат для всех репортеров, включая статус выключенного/частичного/неудавшегося модуля                                           |
-| `report/json.ts`, `markdown.ts`, `html.ts` | Один `ReportData`                                  | Согласованные представления JSON, Markdown и HTML. Различается подача, а не набор фактов                                                                 |
-| `report/write.ts`, `copy-artifacts.ts`     | Результаты репортеров и manifest                   | Каталог отчёта и вложений. Не переносить файлы по произвольным внешним путям; HTML и ссылки обрабатывать как данные                                      |
-| `cli/exit.ts`, `errors.ts`                 | Итог запуска и диагностические ошибки              | Согласованные exit codes и stdout/stderr. Ошибка утилиты отличается от неуспешной проверки анализируемой задачи                                          |
-| `.github/workflows/report.yml`             | Событие PR, доступные результаты CI                | Один запуск той же CLI, job summary и artifact. Использовать явные base/head SHA, run ID и номер попытки                                                 |
+| Module                                     | Input                                           | Output and verifiable responsibility                                                                                                                |
+| ------------------------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cli/args.ts`, `config.ts`                 | Arguments and configuration                     | Mode, paths, and constraints. Validate argument combinations and paths; interface commands are still under discussion                               |
+| `application/context.ts`                   | Explicit SHAs/snapshots and CI metadata         | `RunContext`: run ID, scope, tool version, snapshots, and their provenance. Proof of work without a graph does not require reading Git history      |
+| `git/snapshots.ts`, `changes.ts`           | Available local Git repository                  | Merge-base, head, and file changes. Determine PR changes from merge-base to head; also preserve the original base SHA                               |
+| `analysis/scan.ts`, `scope.ts`             | Two snapshots and scope rules                   | Selected sources and exclusions. Define extensions, limits, and symlink handling before execution                                                   |
+| `analysis/parse.ts`, `imports.ts`          | File text and language                          | Detected constructs with source paths, line numbers, and relationship kinds; computed paths do not become invented edges                            |
+| `analysis/resolve.ts`, `classify.ts`       | A construct and explicitly supported path rules | Internal file, external dependency, intentional exclusion, or unresolved reference with a reason. Validate Flow and React monorepo rules separately |
+| `graph/*`                                  | Files and confirmed edges                       | Indexes in both directions, comparison, cycles, and potential impact with a depth limit. Track type-only and runtime relationships separately       |
+| `evidence/read.ts`, `normalize.ts`         | Task, agent package, and normalized CI result   | Criteria, checks, and attachment references in a common format. Validate schema versions, unique IDs, and cross-references                          |
+| `evidence/provenance.ts`                   | Check result and run context                    | Separate provenance: agent claim, collector record, or CI binding. A plain `source: ci` field in JSON remains a claim                               |
+| `evidence/snapshot.ts`, `artifacts.ts`     | SHA/manifest and attachments                    | Freshness and integrity. A missing SHA means unknown freshness. A hash confirms integrity, rather than the source's honesty                         |
+| `evidence/criteria.ts`, `assess.ts`        | Criteria and verified material references       | Which materials relate to a criterion, and which are missing or stale. A successful command does not automatically mean the task is accepted        |
+| `report/assemble.ts`                       | Context, available results, and diagnostics     | `ReportData`: one result for all reporters, including disabled/partial/failed module status                                                         |
+| `report/json.ts`, `markdown.ts`, `html.ts` | One `ReportData`                                | Consistent JSON, Markdown, and HTML representations. Presentation differs; the set of facts stays the same                                          |
+| `report/write.ts`, `copy-artifacts.ts`     | Reporter output and manifest                    | Report and attachment directory. Do not copy files through arbitrary external paths; treat HTML and links as data                                   |
+| `cli/exit.ts`, `errors.ts`                 | Run outcome and diagnostic errors               | Consistent exit codes and stdout/stderr. Utility errors are distinct from failed checks of the task being analyzed                                  |
+| `.github/workflows/report.yml`             | PR event and available CI results               | One run of the same CLI, a job summary, and an artifact. Use explicit base/head SHAs, run ID, and attempt number                                    |
 
-## Предлагаемые контракты
+## Proposed contracts
 
-Это контракты законченной V1. Текущий `ReportData` пока содержит поля `InputPackage` и счётчики `summary`; контекст запуска, статусы модулей и proof of work ещё не реализованы.
+These contracts describe the complete V1. The current `ReportData` contains `InputPackage` fields and `summary` counts; run context, module statuses, and proof of work are not yet implemented.
 
-| Контракт             | Основные поля                                                                                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `RunContext`         | `schemaVersion`, `toolVersion`, `runId`, `repository`, `headSha`, `baseSha?`, `mergeBaseSha?`, `scope`, `ciRun?`   |
-| `ChangeSet`          | Добавленные/изменённые/удалённые файлы, явные пары переименований, сравниваемые снимки                             |
-| `Edge`               | `from`, `to`, `kind`, `typeOnly`, `specifier`, `sourceLine`, `snapshotId`                                          |
-| `AnalysisResult`     | Статус модуля, файлы и рёбра двух снимков, изменения, циклы, область влияния, ограничения                          |
-| `TaskSpec`           | `taskId`, описание и критерии с уникальными `criterionId`                                                          |
-| `CheckResult`        | `checkId`, `criterionIds`, заявленная команда, результат, `exitCode?`, время, снимок, происхождение, `artifactIds` |
-| `ArtifactRef`        | `artifactId`, относительный путь, тип материала, ожидаемый хеш при наличии                                         |
-| `EvidenceAssessment` | Проверки и материалы, актуальность, целостность, происхождение, отсутствующие связи, непроверенные критерии        |
-| `ReportData`         | Контекст, статус каждого модуля, `analysis?`, `evidence?`, диагностики                                             |
+| Contract             | Main fields                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `RunContext`         | `schemaVersion`, `toolVersion`, `runId`, `repository`, `headSha`, `baseSha?`, `mergeBaseSha?`, `scope`, `ciRun?` |
+| `ChangeSet`          | Added/modified/deleted files, explicit rename pairs, and snapshots being compared                                |
+| `Edge`               | `from`, `to`, `kind`, `typeOnly`, `specifier`, `sourceLine`, `snapshotId`                                        |
+| `AnalysisResult`     | Module status, files and edges from two snapshots, changes, cycles, impact, and limitations                      |
+| `TaskSpec`           | `taskId`, description, and criteria with unique `criterionId` values                                             |
+| `CheckResult`        | `checkId`, `criterionIds`, declared command, outcome, `exitCode?`, time, snapshot, provenance, `artifactIds`     |
+| `ArtifactRef`        | `artifactId`, relative path, material type, and expected hash when available                                     |
+| `EvidenceAssessment` | Checks and materials, freshness, integrity, provenance, missing links, and unverified criteria                   |
+| `ReportData`         | Context, status of each module, `analysis?`, `evidence?`, diagnostics                                            |
 
-`passed`, `failed`, `skipped`, `not-run` описывают результат проверки. Отдельно хранить происхождение, актуальность (`same`, `different`, `unknown`) и целостность вложений. Если неполного входа недостаточно для проверки истинности, показывать этот предел. Для локальной незакоммиченной работы нужен хеш манифеста области проверки; один Git SHA не описывает рабочее дерево.
+`passed`, `failed`, `skipped`, and `not-run` describe a check's outcome. Store provenance, freshness (`same`, `different`, `unknown`), and attachment integrity separately. If incomplete input is insufficient to verify truth, show that limitation. Local uncommitted work requires a manifest hash for the checked scope; a Git SHA alone does not describe the working tree.
 
-Данные из агента и внешних результатов CI принимаются через наш нормализованный формат. Нативный импорт всех полей Playwright/JUnit, запросы к API произвольных CI и подтверждение чужих запусков — будущие адаптеры, не обещание первой версии. В первой версии CI-процесс может подготовить `ci-results.json` и вложения; утилита лишь читает их. Тесты анализируемого репозитория и команды из пакета не выполняются утилитой.
+Agent data and external CI results are accepted through our normalized format. Native import of all Playwright/JUnit fields, requests to arbitrary CI APIs, and confirmation of external runs are future adapters, rather than first-version promises. In the first version, a CI process can prepare `ci-results.json` and attachments; the utility only reads them. It does not execute tests from the repository being analyzed or commands from the package.
 
-## Разложение по файлам
+## File layout
 
 ```text
 src/
@@ -74,32 +74,32 @@ src/
                  write.ts, copy-artifacts.ts
     assets/      map.js, evidence.js, diagnostics.js, report.css
 tests/
-  fixtures/      ручные графы, выбранный участок React, пакеты доказательств
-  cli/           настоящий процесс: аргументы, exit code, выходные файлы
-  analysis/      поддержанные конструкции, unresolved, исключения
-  graph/         цепочки, циклы, ромбы, сравнение снимков
-  evidence/      отсутствующие ID/файлы, другой снимок, пропуски
-  report/        согласованность репортеров и браузерные сценарии
+  fixtures/      manual graphs, selected React scope, evidence packages
+  cli/           real process: arguments, exit code, output files
+  analysis/      supported constructs, unresolved references, exclusions
+  graph/         chains, cycles, diamonds, snapshot comparison
+  evidence/      missing IDs/files, different snapshot, skipped checks
+  report/        reporter consistency and browser scenarios
 .github/
   workflows/     report.yml
 ```
 
-Это ориентир границ, а не требование создать пустой файл на каждую строку. На первых шагах небольшие обязанности можно держать рядом; выделять файлы при появлении реальной реализации.
+This guides responsibility boundaries; it does not require an empty file for every line. Small responsibilities can stay together during the first steps; extract files when actual implementations appear.
 
-## Границы законченной V1
+## Scope of the complete V1
 
-В V1 входят локальная CLI, конкретная поддержанная область JS/Flow, два независимых пути обработки, единый формат данных, JSON/Markdown/HTML, переносимые вложения, локальный просмотр отчёта и workflow для PR. Для React сначала ограничить область семью реальными файлами контрольного снимка; расширение на весь монорепозиторий требует отдельной приёмки. Не заявлять поддержку forks и всех правил сборки React по нескольким совпавшим алиасам.
+V1 includes a local CLI, a specific supported JS/Flow scope, two independent processing paths, a common data format, JSON/Markdown/HTML, portable attachments, local report viewing, and a PR workflow. For React, initially limit the scope to seven real files from the reference snapshot; expanding to the entire monorepo requires separate acceptance checks. Do not claim support for forks and all React build rules based on a few matching aliases.
 
-В V1 не входят AI-чат/авторевью, автоматический запуск агентов, исполнение загруженных команд, сервер с аккаунтами, запись комментариев бота, собственный diff и публикация отчётов в интернет. Архитектура пока не фиксирует библиотеку парсера и движок HTML-карты.
+V1 excludes AI chat/automatic review, automatic agent execution, execution of loaded commands, a server with accounts, bot comments, a custom diff viewer, and publishing reports online. The architecture does not yet specify a parser library or HTML graph engine.
 
-## Как читать схемы вместе
+## Reading the diagrams together
 
-Начать со схемы proof of work: `task.json → проверки → материалы → оценка → отчёт`. Она не требует понимания AST и обхода графа. Потом разобрать общий CLI и только затем анализ зависимостей. Реализация всего изображённого за один ход не поручается.
+Start with the proof of work diagram: `task.json → checks → materials → assessment → report`. It does not require understanding ASTs or graph traversal. Then examine the general CLI flow, followed by dependency analysis. Implementing everything shown in a single step is not authorized.
 
-## Источники интеграции
+## Integration sources
 
-- [События GitHub Actions и особенности SHA для PR](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
-- [Хранение и скачивание workflow artifacts](https://docs.github.com/en/actions/tutorials/store-and-share-data).
-- [Playwright reporters: форматы результатов](https://playwright.dev/docs/test-reporters).
+- [GitHub Actions events and PR SHA behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
+- [Storing and downloading workflow artifacts](https://docs.github.com/en/actions/tutorials/store-and-share-data).
+- [Playwright reporters: result formats](https://playwright.dev/docs/test-reporters).
 
-Порядок шагов, контракты и имена файлов на схемах — наши проектные решения. Официальные источники подтверждают только механизмы интеграции и форматы внешних инструментов.
+The sequence of steps, contracts, and filenames in the diagrams are our design decisions. Official sources confirm only integration mechanisms and external tool formats.

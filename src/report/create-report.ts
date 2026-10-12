@@ -1,4 +1,4 @@
-// Преобразует проверенный вход в данные отчёта
+// Converts validated input into report data
 
 import type { InputPackage } from "../contracts/input.js";
 import type { ReportData } from "../contracts/report.js";

@@ -1,4 +1,4 @@
-// Описывает структуру итогового отчёта
+// Defines the structure of the final report
 import type { InputPackage } from "./input.js";
 
 export type ReportSummary = {

@@ -1,23 +1,23 @@
 %%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
 flowchart TD
-  SNAPSHOTS["git/snapshots.ts<br/>merge-base и head: два снимка"] --> CHANGES
+  SNAPSHOTS["git/snapshots.ts<br/>merge-base and head: two snapshots"] --> CHANGES
   SNAPSHOTS --> SCAN
-  CHANGES["git/changes.ts<br/>добавлен, изменён, удалён, переименован"] --> DIFF
-  SCAN["analysis/scan.ts<br/>список файлов каждого снимка"] --> FILTER
-  FILTER["analysis/scope.ts<br/>расширения, исключения, лимиты"] --> PARSE
-  PARSE["analysis/parse.ts<br/>AST поддержанного JS / Flow"] --> IMPORTS
-  PARSE -->|"неподдержанный синтаксис"| DIAGNOSTICS
-  IMPORTS["analysis/imports.ts<br/>import, export-from, literal import/require<br/>отдельно type-only"] --> RESOLVE
-  IMPORTS -->|"вычисляемый путь"| DIAGNOSTICS
-  RESOLVE["analysis/resolve.ts<br/>относительный путь / заданный alias"] --> CLASSIFY
-  CLASSIFY["analysis/classify.ts<br/>внутренний / внешний / исключённый / unresolved"] -->|"внутренний файл"| EDGES
-  CLASSIFY -->|"ограничения и причины"| DIAGNOSTICS
-  EDGES["Edge[]<br/>from, to, вид, specifier, строка"] --> INDEX
-  INDEX["graph/index.ts<br/>импортирует / импортируется"] --> DIFF
+  CHANGES["git/changes.ts<br/>added, modified, deleted, renamed"] --> DIFF
+  SCAN["analysis/scan.ts<br/>file list for each snapshot"] --> FILTER
+  FILTER["analysis/scope.ts<br/>extensions, exclusions, limits"] --> PARSE
+  PARSE["analysis/parse.ts<br/>AST for supported JS / Flow"] --> IMPORTS
+  PARSE -->|"unsupported syntax"| DIAGNOSTICS
+  IMPORTS["analysis/imports.ts<br/>import, export-from, literal import/require<br/>type-only handled separately"] --> RESOLVE
+  IMPORTS -->|"computed path"| DIAGNOSTICS
+  RESOLVE["analysis/resolve.ts<br/>relative path / configured alias"] --> CLASSIFY
+  CLASSIFY["analysis/classify.ts<br/>internal / external / excluded / unresolved"] -->|"internal file"| EDGES
+  CLASSIFY -->|"limitations and reasons"| DIAGNOSTICS
+  EDGES["Edge[]<br/>from, to, kind, specifier, line"] --> INDEX
+  INDEX["graph/index.ts<br/>imports / imported by"] --> DIFF
   INDEX --> CYCLES
   INDEX --> IMPACT
-  DIFF["graph/compare.ts<br/>новые и удалённые рёбра"] --> RESULT
-  CYCLES["graph/cycles.ts<br/>циклы до и после изменения"] --> RESULT
-  IMPACT["graph/impact.ts<br/>обратный обход, глубина, без повторов"] --> RESULT
-  DIAGNOSTICS["Diagnostic[]<br/>причина, файл, строка, полнота анализа"] --> RESULT
-  RESULT["AnalysisResult<br/>файлы, графы, изменения, ограничения"]
+  DIFF["graph/compare.ts<br/>added and removed edges"] --> RESULT
+  CYCLES["graph/cycles.ts<br/>cycles before and after the change"] --> RESULT
+  IMPACT["graph/impact.ts<br/>reverse traversal, depth, no duplicates"] --> RESULT
+  DIAGNOSTICS["Diagnostic[]<br/>reason, file, line, analysis completeness"] --> RESULT
+  RESULT["AnalysisResult<br/>files, graphs, changes, limitations"]

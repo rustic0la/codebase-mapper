@@ -15,13 +15,13 @@ it("reads UTF-8 JSON into the report flow and propagates malformed or missing fi
   const directory = await mkdtemp(join(tmpdir(), "codebase-mapper-json-"));
   try {
     const input = syntheticInput();
-    input.scope.description = "Проверка чтения UTF-8";
+    input.scope.description = "UTF-8 café check";
     const validPath = join(directory, "input.json");
     await writeFile(validPath, JSON.stringify(input), "utf8");
     const parsed = await reportJson(validPath);
     expect(parsed).toEqual(input);
     const markdown = renderMarkdown(createReport(checkInput(parsed)));
-    expect(markdown).toContain("Проверка чтения UTF-8");
+    expect(markdown).toContain("UTF-8 café check");
     expect(markdown).toContain("RuntimeEdgeCount: 1 | TypeOnlyEdgeCount: 1");
 
     // Reading accepts any valid JSON; structure validation belongs to checkInput.

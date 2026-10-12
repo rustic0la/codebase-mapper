@@ -1,124 +1,124 @@
-# План CLI для анализа pull request и генерации отчёта
+# Plan for PR analysis and report generation with a CLI
 
-## 1. Формат продукта
+## 1. Product format
 
-Уточнение пользователя: продукт — консольная утилита, встроенная в GitHub Actions. При создании PR и обновлении его ветки она анализирует изменения, связывает их с зависимостями и формирует отчёт, который можно открыть после выполнения pipeline. Ориентир по доставке результата — HTML-отчёт Playwright.
+The user clarified the product: a console utility integrated into GitHub Actions. When a PR is created or its branch is updated, the utility analyzes changes, connects them to dependencies, and generates a report that can be opened after the pipeline finishes. Playwright's HTML report is the reference for delivering the result.
 
-Локальный запуск и CI используют одну команду. Результат — каталог с `report.json`, краткой сводкой `summary.md` и, после реализации HTML-репортера, `index.html` с картой. В терминале остаются краткий результат и путь к отчёту. Отдельное веб-приложение, аккаунты и серверная БД не требуются.
+Local runs and CI use the same command. The output is a directory containing `report.json`, a short `summary.md`, and, once the HTML reporter is implemented, an `index.html` with the map. The terminal shows a brief result and the report path. A separate web application, accounts, and a server database are not required.
 
-React — выбранный контрольный репозиторий, https://github.com/react/react. Использование React для самого инструмента не является требованием. Технологию просмотра HTML-отчёта выберем по его потребностям; сначала определить данные и CLI.
+React is the selected reference repository: https://github.com/react/react. Using React to build the tool itself is not a requirement. We will choose the HTML report technology based on its needs; first, define the data and CLI.
 
-Источник вдохновения — Cartograph. Самостоятельный вклад: анализ изменений в PR, карта потенциального влияния и проверяемые материалы работы агента в переносимом отчёте pipeline.
+Cartograph is the inspiration. Our independent contribution is PR change analysis, a map of potential impact, and verifiable evidence of agent work in a portable pipeline report.
 
-## 2. Сценарий использования
+## 2. Usage scenario
 
-1. Разработчик открывает PR или отправляет новые коммиты в его ветку.
-2. GitHub Actions запускает CLI на явно заданных базовом и итоговом снимках.
-3. Утилита определяет изменённые файлы, анализирует поддержанные импорты и сравнивает связи.
-4. Если предоставлены материалы проверок, связывает их с задачей и снимком.
-5. Генерирует отчёт и краткую сводку выполнения. Workflow сохраняет каталог отчёта как artifact.
-6. Ревьюер читает сводку, скачивает отчёт и открывает карту, зависимости и материалы проверок. Исходники и diff открываются в GitHub или редакторе.
+1. A developer opens a PR or pushes new commits to its branch.
+2. GitHub Actions runs the CLI with explicit base and head snapshots.
+3. The utility identifies changed files, analyzes supported imports, and compares dependency edges.
+4. If check evidence is provided, it links that evidence to the task and snapshot.
+5. It generates a report and a brief run summary. The workflow stores the report directory as an artifact.
+6. A reviewer reads the summary, downloads the report, and opens the map, dependencies, and check evidence. Source files and diffs open in GitHub or an editor.
 
-Планируемый GitHub-триггер — `pull_request` с типами `opened`, `synchronize`, `reopened`; новый коммит в уже открытом PR приводит к новому анализу. Анализ каждого push без PR — отдельная опция на будущее.
+The planned GitHub trigger is `pull_request` with the `opened`, `synchronize`, and `reopened` types; a new commit in an open PR triggers a new analysis. Analyzing every push without a PR is a separate future option.
 
-В первой интеграции использовать artifact и job summary. Публикация HTML по постоянному URL и комментарии от бота в PR — отдельные расширения. Скачиваемый artifact сам по себе не является опубликованным сайтом.
+Use an artifact and a job summary for the first integration. Publishing HTML at a permanent URL and posting bot comments on PRs are separate extensions. A downloadable artifact is not itself a published website.
 
-## 3. Что будет в отчёте
+## 3. Report contents
 
-- Репозиторий, PR при наличии, время запуска, версии инструмента и схемы данных.
-- Идентификаторы базового, итогового и сравниваемого снимков; информация о полноте анализа.
-- Изменённые файлы и карта зависимостей. Выбор файла открывает его прямые и обратные связи и ссылки на исходники.
-- Добавленные и удалённые связи, новые циклы и потенциальная область влияния по импортам с ограничением глубины.
-- Задача агента и критерии приёмки, если передан соответствующий пакет.
-- Результаты предоставленных проверок, логи и вложения, происхождение и актуальность для снимка.
-- Неразрешённые импорты, ошибки анализа, неподдержанные конструкции и непроверенные критерии.
+- Repository, PR when available, run time, tool version, and data schema version.
+- IDs of the base, head, and comparison snapshots; analysis completeness.
+- Changed files and a dependency map. Selecting a file opens its direct and reverse dependencies and source links.
+- Added and removed edges, new cycles, and potential impact through imports with a depth limit.
+- The agent's task and acceptance criteria, if the corresponding package is provided.
+- Results of the provided checks, logs and attachments, provenance, and freshness for the snapshot.
+- Unresolved imports, analysis errors, unsupported constructs, and unverified criteria.
 
-Карта импортов показывает структурные зависимости. Она не доказывает, что конкретное изменение сломает приложение. Type-only связи отделяются от runtime-связей; отсутствие входящих импортов не доказывает неиспользуемый код.
+The import map shows structural dependencies. It does not prove that a specific change will break the application. Type-only edges are separate from runtime edges; having no incoming imports does not prove that code is unused.
 
-Отчёт агента содержит заявленные результаты. Проверка JSON-схемы и хешей устанавливает согласованность данных; независимое подтверждение выполнения требует проверки доверенного источника CI или повторного запуска на том же снимке. Отсутствующий или пропущенный результат не становится успешным.
+An agent report contains declared results. JSON schema and hash validation establish data consistency; independent confirmation of execution requires verification against a trusted CI source or a rerun on the same snapshot. A missing or skipped result does not become a passing result.
 
-## 4. Архитектура и стартовый стек
+## 4. Architecture and initial stack
 
-Подробные схемы модулей, их входы/выходы и предлагаемая структура файлов: [diagrams/README.md](./diagrams/README.md). Анализ графа и proof of work независимы; отчёт может содержать только один из них. Схемы описывают предлагаемую законченную V1, а не уже реализованные возможности.
+Detailed module diagrams, inputs and outputs, and the proposed file structure: [diagrams/README.md](./diagrams/README.md). Graph analysis and proof of work are independent; a report can contain either one on its own. The diagrams describe the proposed complete V1, rather than capabilities already implemented.
 
-| Часть     | Обязанность                                                  | Начальный выбор                                                                      |
-| --------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| CLI       | Аргументы, ошибки, orchestration, выходные файлы             | Node.js + TypeScript; выбор библиотеки аргументов отложен                            |
-| Контракты | Версии и валидация анализа, ревью и доказательств            | JSON; текущая валидация ручная, Zod остаётся в плане                                 |
-| Парсер    | Файлы, импорты, разрешение путей, доказательства связей      | Выбрать после проверки Flow-синтаксиса на React; не считать ts-morph поддержкой Flow |
-| Граф      | Индексы, обход, циклы, сравнение снимков                     | Чистые функции TypeScript                                                            |
-| Репортеры | Терминал, Markdown, JSON, затем HTML-карта                   | Генераторы на основе одного результата анализа                                       |
-| Проверки  | Ручной эталон, тесты CLI и графа, браузерные сценарии отчёта | Vitest; Playwright для HTML                                                          |
-| CI        | Запуск CLI, сводка и artifact                                | GitHub Actions                                                                       |
+| Part      | Responsibility                                                               | Initial choice                                                                  |
+| --------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| CLI       | Arguments, errors, orchestration, output files                               | Node.js + TypeScript; argument library selection is deferred                    |
+| Contracts | Versions and validation for analysis, review, and evidence                   | JSON; current validation is manual, with Zod still planned                      |
+| Parser    | Files, imports, path resolution, evidence for edges                          | Choose after testing Flow syntax on React; do not assume ts-morph supports Flow |
+| Graph     | Indexes, traversal, cycles, snapshot comparison                              | Pure TypeScript functions                                                       |
+| Reporters | Terminal, Markdown, JSON, then an HTML map                                   | Generators based on one analysis result                                         |
+| Checks    | Manual reference data, CLI and graph tests, browser scenarios for the report | Vitest; Playwright for HTML                                                     |
+| CI        | CLI execution, summary, and artifact                                         | GitHub Actions                                                                  |
 
-Парсер не зависит от HTML, React, AI и GitHub API. Репортеры не повторяют графовые алгоритмы. HTML читает готовый результат и не выполняет новый анализ репозитория. Для переносимого отчёта ресурсы поставляются в его каталоге; сеть не нужна для чтения сохранённых данных. Если выбранная реализация требует локальной раздачи, добавить команду `show-report` и явно описать её.
+The parser is independent of HTML, React, AI, and the GitHub API. Reporters do not duplicate graph algorithms. HTML reads the completed result without analyzing the repository again. A portable report includes its assets in the report directory; reading saved data does not require network access. If the chosen implementation requires local serving, add a `show-report` command and document it explicitly.
 
-Ранний каркас Vite/React удалён. package.json и конфиги приведены к Node.js-модулям: сборке TypeScript и тестам Vitest. Исполняемая CLI и HTML-репортер ещё не реализованы; выбор технологии HTML остаётся открытым.
+The early Vite/React scaffold has been removed. package.json and configuration files now target Node.js modules: TypeScript compilation and Vitest tests. The executable CLI and HTML reporter are not implemented yet; the HTML technology remains undecided.
 
-## 5. Этапы
+## 5. Stages
 
-### Этап 0. Данные одного отчёта
+### Stage 0. Data for one report
 
-Вместе определить один контрольный вход и ожидаемый результат. Использовать реальный участок React из `specs/001-review-prototype.md`; связи размечены вручную. Отдельно перечислить неподдержанные и находящиеся за границей выбранного участка импорты. Зафиксировать происхождение примеров проверок.
+Define one reference input and its expected output together. Use a real subset of React from `specs/001-review-prototype.md`, with edges labeled manually. List unsupported imports and imports outside the selected subset separately. Record the provenance of example check results.
 
-**Приёмка:** заранее известны файлы, связи, снимки и ограничения. Эталон не генерируется проверяемой реализацией.
+**Acceptance:** files, edges, snapshots, and limitations are known in advance. The reference data is not generated by the implementation being tested.
 
-### Этап 1. CLI и текстовый отчёт
+### Stage 1. CLI and text report
 
-Первый небольшой результат: команда принимает контрольный JSON и каталог вывода, валидирует вход и создаёт `report.json` и `summary.md`. Это первый репортер; анализ исходников появится следующими задачами. Формат аргументов, сообщения и exit codes описать до реализации.
+The first small result: a command accepts reference JSON and an output directory, validates the input, and creates `report.json` and `summary.md`. This is the first reporter; source analysis comes in later tasks. Describe arguments, messages, and exit codes before implementation.
 
-**Приёмка:** корректный вход даёт ожидаемые файлы и сводку; повреждённый JSON, неизвестная версия, отсутствующий файл и невозможность записи дают понятную ошибку. Поддержанные предупреждения отличаются от невозможности выполнения анализа.
+**Acceptance:** valid input produces the expected files and summary; malformed JSON, an unknown version, a missing file, and a write failure produce clear errors. Supported warnings are distinguished from an inability to perform analysis.
 
-### Этап 2. Реальный анализ и сравнение Git-снимков
+### Stage 2. Real analysis and Git snapshot comparison
 
-Добавлять синтаксические конструкции по одной: импорты и реэкспорты, type-only связи, literal dynamic import и require. Для React отдельно проверить Flow, межпакетные пути и build-time forks. Считать реальную неполноту и сохранять причины неразрешённых связей.
+Add syntax constructs one at a time: imports and re-exports, type-only edges, literal dynamic imports, and require calls. For React, check Flow, paths between packages, and build-time forks separately. Account for actual incompleteness and preserve the reasons for unresolved edges.
 
-Добавить индексы импортов, обратный обход с глубиной, защиту от циклов и сравнение графов. Git-адаптер сохраняет `baseSha`, `headSha`, `mergeBaseSha`; изменение PR определяется от merge-base до head. Снимки не подменяются автоматически переменной `GITHUB_SHA`, которая для события PR может указывать на merge-коммит. Неизвестная или недоступная история — явная ошибка.
+Add import indexes, reverse traversal with a depth limit, cycle protection, and graph comparison. The Git adapter preserves `baseSha`, `headSha`, and `mergeBaseSha`; PR changes are determined from merge-base to head. Do not automatically replace snapshots with `GITHUB_SHA`, which may refer to a merge commit for a PR event. Unknown or unavailable history is an explicit error.
 
-**Приёмка:** точный ручной эталон парсера, цепочки, циклы, ромбы, удалённые файлы, переименования и негативные примеры. Каждый внутренний импорт подтверждён файлом и строкой. Type-only влияние показано отдельно.
+**Acceptance:** an exact manual parser reference, chains, cycles, diamonds, deleted files, renames, and negative examples. Every internal import is supported by a file and line. Type-only impact is shown separately.
 
-### Этап 3. HTML-отчёт с картой
+### Stage 3. HTML report with a map
 
-Из того же результата формировать переносимый HTML-отчёт. Центральная область — карта; рядом список файлов и детали выбранного узла. Предусмотреть текстовую навигацию с клавиатуры, объяснение неполноты и ссылки на источник конкретного коммита. Встроенного diff нет.
+Generate a portable HTML report from the same result. The map is central, with a file list and details for the selected node beside it. Provide text navigation with keyboard support, explanations of incompleteness, and source links for a specific commit. There is no embedded diff.
 
-**Приёмка:** после завершения CLI отчёт можно открыть и исследовать. Выбор файла синхронизирует карту, список связей и детали. Браузерный сценарий проверяет реальные клики, клавиатуру, пустые состояния и большой пример. Численные бюджеты размера отчёта и времени взаимодействия выбрать до проверки.
+**Acceptance:** the report can be opened and explored after the CLI completes. Selecting a file synchronizes the map, edge list, and details. A browser scenario tests real clicks, keyboard interaction, empty states, and a large example. Choose numeric budgets for report size and interaction time before checking them.
 
-### Этап 4. Proof of work
+### Stage 4. Proof of work
 
-Принимать пакет задачи и результатов уже выполненных проверок по протоколу из [WORKSHOP-NOTES.md](./WORKSHOP-NOTES.md#протокол-proof-of-work-для-продукта). Различать результат, источник и актуальность снимка. Показывать отсутствующие материалы и непокрытые критерии.
+Accept a task package and results of checks already performed using the protocol in [WORKSHOP-NOTES.md](./WORKSHOP-NOTES.md#proof-of-work-protocol-for-the-product). Distinguish outcome, source, and snapshot freshness. Show missing evidence and uncovered criteria.
 
-CLI не запускает команды из импортированного отчёта и не выполняет скрипты анализируемого репозитория. Результаты тестов поступают от существующего, явно настроенного процесса CI. Интеграция с конкретным форматом, например Playwright, — отдельная задача. Не обещать доказательство полного тестового покрытия через наличие связи с файлом.
+The CLI does not run commands from imported reports or execute scripts from the analyzed repository. Test results come from an existing, explicitly configured CI process. Integration with a particular format, such as Playwright, is a separate task. Linking evidence to a file does not prove full test coverage.
 
-**Приёмка:** настоящий пакет выполненной задачи и негативные примеры с другим снимком, отсутствующим логом, упавшим или незапущенным тестом. Демонстрационные данные явно отделены от фактических результатов.
+**Acceptance:** a real completed-task package and negative examples with a different snapshot, a missing log, and a failed or unexecuted test. Demo data is clearly distinguished from actual results.
 
-### Этап 5. GitHub Actions
+### Stage 5. GitHub Actions
 
-Workflow запускает ту же локальную команду на PR, передаёт явные снимки, сохраняет Markdown в job summary и каталог отчёта в artifact. Материалы диагностик сохраняются и при неуспешном анализе. Повторный запуск привязан к run ID и head SHA; новый запуск не выдаёт старый отчёт за актуальный.
+The workflow runs the same local command on a PR, passes explicit snapshots, saves Markdown in the job summary, and stores the report directory as an artifact. Diagnostic evidence is preserved even when analysis fails. A rerun is tied to a run ID and head SHA; a new run does not present an old report as current.
 
-**Приёмка:** реальные запуск при создании PR и повторный запуск после нового коммита; скачивание и открытие отчёта; понятный неуспешный запуск. Сначала обкатать в нашем репозитории. Копия React остаётся данными для анализа; публикация изменений в upstream не требуется.
+**Acceptance:** an actual run when a PR is created and a rerun after a new commit; downloading and opening the report; a clear failed run. Start by testing this in our repository. The React copy remains analysis data; publishing changes upstream is not required.
 
-### Этап 6. Портфолио и расширения
+### Stage 6. Portfolio and extensions
 
-README с установкой, локальным запуском, примером workflow и ограничениями; пример отчёта на React; короткое видео; архитектура и измеренные результаты. Называть фактически реализованные возможности и собственный вклад, указать Cartograph как источник вдохновения.
+A README with installation, local execution, an example workflow, and limitations; an example report on React; a short video; architecture and measured results. Describe capabilities actually implemented and our own contribution, and credit Cartograph as the inspiration.
 
-AI-объяснения и AI-ревью добавлять по отдельной спецификации после работающего pipeline. Модель получает проверенные структурные данные, исходники и ограничения, отвечает со ссылками; не создаёт рёбра. Аккаунты, команды и SaaS в текущий план не входят.
+Add AI explanations and AI review under a separate specification after the pipeline works. The model receives verified structural data, source files, and limitations, and answers with references; it does not create edges. Accounts, teams, and SaaS are outside the current plan.
 
-## 6. Работа в паре
+## 6. Pair workflow
 
-Один шаг — один понятный результат. Сначала объяснить вход, выход и причину решения; пользователь участвует в разборе данных и кода. Затем реализовать отдельный фрагмент, выполнить проверки и обсудить результат. Общий план не поручает агенту автоматически выполнить весь этап.
+One step produces one clear result. First explain the input, output, and reason for the decision; the user participates in understanding the data and code. Then implement a single part, run checks, and discuss the result. The overall plan does not instruct the agent to complete an entire stage automatically.
 
-Первый шаг теперь — данные и текст одного CLI-отчёта. Работа с состоянием React-компонента не является следующим шагом проекта. Текущая спецификация: [specs/001-review-prototype.md](./specs/001-review-prototype.md).
+The first step is now the data and text for one CLI report. React component state is not the project's next step. Current specification: [specs/001-review-prototype.md](./specs/001-review-prototype.md).
 
-## 7. Проверки и материалы
+## 7. Checks and evidence
 
-Для парсера сохранять ручной expected, actual и diff; для CLI — аргументы, stdout/stderr, exit code и выходные файлы; для HTML — браузерный сценарий и trace. Проверки нашего инструмента запускаются отдельно от анализируемого репозитория. Изменения эталонов и проверок объяснять.
+For the parser, preserve a manual expected result, the actual result, and a diff; for the CLI, preserve arguments, stdout/stderr, exit code, and output files; for HTML, preserve the browser scenario and trace. Checks for our tool run separately from the analyzed repository. Explain changes to reference data and checks.
 
-`pnpm typecheck`, `pnpm test`, `pnpm build` приведены к Node.js-проекту и проверяют реализованные модули чтения, валидации и отчёта. Тесты используют синтетические пакеты; исполняемая CLI и контрольный пакет React ещё не реализованы. Playwright вводить вместе с HTML-репортером. Фактически выполненные команды и результаты сохранять отдельно от демо-данных.
+`pnpm typecheck`, `pnpm test`, and `pnpm build` now target the Node.js project and check the implemented reading, validation, and report modules. Tests use synthetic packages; the executable CLI and reference React package are not implemented yet. Introduce Playwright with the HTML reporter. Preserve actually executed commands and their results separately from demo data.
 
-## 8. Отправные источники
+## 8. Starting references
 
-- [GitHub Actions: события pull_request](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
-- [GitHub Actions: хранение отчётов в artifacts](https://docs.github.com/en/actions/tutorials/store-and-share-data).
+- [GitHub Actions: pull_request events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request).
+- [GitHub Actions: storing reports as artifacts](https://docs.github.com/en/actions/tutorials/store-and-share-data).
 - [Playwright: HTML reporter](https://playwright.dev/docs/test-reporters#html-reporter).
 
-Перед реализацией конкретных команд и workflow проверить актуальные инструкции и совместимость версий.
+Before implementing specific commands and workflows, check current instructions and version compatibility.

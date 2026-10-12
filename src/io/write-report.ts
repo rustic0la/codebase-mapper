@@ -1,1 +1,1 @@
-// Сохраняет JSON и Markdown на диск
+// Writes JSON and Markdown to disk

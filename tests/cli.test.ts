@@ -1,1 +1,1 @@
-// Запускает настоящую CLI и проверяет её поведение
+// Runs the real CLI and verifies its behavior

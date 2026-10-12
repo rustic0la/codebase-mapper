@@ -1,4 +1,4 @@
-// Читает файл и разбирает JSON
+// Reads a file and parses its JSON
 import { readFile } from "node:fs/promises";
 
 export async function reportJson(filePath: string): Promise<unknown> {

@@ -1,4 +1,4 @@
-// Превращает данные отчёта в текст сводки
+// Renders report data as a Markdown summary
 
 import type { ReportData } from "../contracts/report.js";
 

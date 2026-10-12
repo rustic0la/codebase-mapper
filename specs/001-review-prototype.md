@@ -1,47 +1,47 @@
-# Задача 001: первый CLI-отчёт на участке React
+# Task 001: first CLI report for a React scope
 
-## Формат продукта
+## Product format
 
-Утилита запускается локально и в GitHub Actions при создании и обновлении PR. Она формирует отчёт по снимкам кода; позже HTML-репортер показывает карту и доказательства работы агента. Отдельное React-приложение не является целью. Имя файла спецификации сохранено для существующих ссылок; прежний интерфейсный прототип заменён этой задачей до реализации.
+The utility runs locally and in GitHub Actions when a PR is created or updated. It generates a report from code snapshots; later, an HTML reporter will display the graph and evidence of the agent's work. A separate React application is not the goal. The specification's filename is retained for existing links; the earlier interface prototype was replaced by this task before implementation.
 
-## Первый небольшой сценарий
+## First small scenario
 
-Пользователь передаёт CLI контрольный JSON и каталог вывода. Команда проверяет пакет и создаёт `report.json` и краткую сводку `summary.md`. До написания кода вместе разбираем один пример входа и ожидаемый текст сводки. Имя исполняемой команды и flags ещё не выбраны.
+The user supplies the CLI with reference JSON and an output directory. The command validates the package and creates `report.json` and a short `summary.md`. Before writing code, we review one input example and the expected summary text together. The executable command name and flags have not yet been selected.
 
-Пока реализованы только модули чтения JSON, валидации пакета, сборки статистики и Markdown-сводки. CLI, запись файлов и контрольный пакет React остаются следующими шагами; приёмка ниже описывает завершённый сценарий.
+Only the modules for JSON reading, package validation, statistics, and the Markdown summary are currently implemented. The CLI, file writing, and reference React package remain next steps; the acceptance criteria below describe the complete scenario.
 
-## Контрольные данные
+## Reference data
 
-- Репозиторий: https://github.com/react/react.
-- Итоговый коммит: `15f7cd693e102c568df501eeeb9684f507e0ec0b`, `Add ReactDOM browser() API (#37143)`.
-- Базовый коммит: `6cb4322d65f4c68daa183df24b5f81668cedab14`.
-- Семь настоящих файлов вокруг `packages/react-dom/src/shared/ReactDOMBrowser.js`. Это выбранный участок, а не полный анализ коммита или репозитория.
-- Связи размечены вручную и проверяются по import/export в итоговом исходнике. Type-only импорты отделены от runtime-связей.
-- Тесты и сборка React не запускаются. Их результаты не выдумываются. Для будущих примеров proof of work сохраняется явное демонстрационное происхождение.
+- Repository: https://github.com/react/react.
+- Head commit: `15f7cd693e102c568df501eeeb9684f507e0ec0b`, `Add ReactDOM browser() API (#37143)`.
+- Base commit: `6cb4322d65f4c68daa183df24b5f81668cedab14`.
+- Seven real files around `packages/react-dom/src/shared/ReactDOMBrowser.js`. This is a selected scope, rather than a complete analysis of the commit or repository.
+- Relationships are annotated manually and verified against imports/exports in the head source. Type-only imports are separated from runtime relationships.
+- React tests and builds are not run. Their results are not invented. Future proof of work examples retain explicit demo provenance.
 
-## Контракт на этом шаге
+## Contract for this step
 
-Версия схемы, repository URL, идентификаторы снимков, список файлов, размеченные связи с исходным путём и строкой, границы анализа и предупреждения. Исходник связывается с точным коммитом. Семь файлов контрольного примера не означают, что анализируется весь PR.
+Schema version, repository URL, snapshot identifiers, file list, annotated relationships with source paths and line numbers, analysis boundaries, and warnings. Sources are linked to an exact commit. The seven files in the reference example do not mean that the entire PR is analyzed.
 
-JSON и Markdown формируются из одного валидируемого результата. Различать успешное создание частичного отчёта с предупреждениями и невозможность выполнения команды. Зафиксировать exit codes до реализации. Не считать генерацию отчёта доказательством корректности анализируемого кода.
+JSON and Markdown are generated from one validated result. Distinguish successful generation of a partial report with warnings from an inability to execute the command. Define exit codes before implementation. Report generation is not evidence that the analyzed code is correct.
 
-## Приёмка
+## Acceptance criteria
 
-1. Корректный пакет создаёт два ожидаемых файла. В сводке видны репозиторий, снимок, выбранная область анализа и ограничения.
-2. `ReactDOMBrowser.js` имеет импорты `ReactSymbols.js`, `ReactFeatureFlags.js` и `ReactTypes.js`; последний обозначен как type-only. Импортирующий файл — `ReactDOM.js`.
-3. Каждая ссылка на источник содержит итоговый commit SHA; строка импорта соответствует настоящему исходнику.
-4. Повреждённый JSON, неизвестная версия, дубли ID и ссылки на отсутствующие файлы отклоняются.
-5. Отсутствующий вход и невозможность записи дают понятную ошибку и согласованный ненулевой exit code. Невалидный вход не создаёт отчёт об успехе.
-6. Повторный запуск на том же входе даёт тот же анализ и порядок списков. Сведения о времени выполнения не изменяют структурные результаты.
+1. A valid package creates the two expected files. The summary shows the repository, snapshot, selected analysis scope, and limitations.
+2. `ReactDOMBrowser.js` imports `ReactSymbols.js`, `ReactFeatureFlags.js`, and `ReactTypes.js`; the last import is marked as type-only. `ReactDOM.js` imports `ReactDOMBrowser.js`.
+3. Every source link contains the head commit SHA; the import line matches the actual source.
+4. Malformed JSON, unknown versions, duplicate IDs, and references to missing files are rejected.
+5. Missing input and write failures produce a clear error and a consistent nonzero exit code. Invalid input does not create a success report.
+6. Repeated runs on the same input produce the same analysis and list order. Execution timing information does not change structural results.
 
-## Отложено
+## Deferred
 
-Парсер, разрешение Flow и межпакетных путей всего React, Git-адаптер, HTML-карта, импорт результатов CI, GitHub workflow, AI, публикация сайта, комментарии бота и собственный diff. Эти части остаются в плане и выполняются отдельными задачами.
+The parser, Flow and cross-package path resolution for the entire React repository, Git adapter, HTML graph, CI result import, GitHub workflow, AI, website publishing, bot comments, and custom diff viewer. These parts remain in the plan and are implemented as separate tasks.
 
-## Доказательства
+## Evidence
 
-После реализации CLI тесты должны вызывать настоящую команду и проверять exit code, сообщения и файлы по ручному эталону. Сохранить выполненные команды и результаты. Сейчас typecheck/test/build настроены для Node.js-модулей; тесты проверяют чтение JSON, валидацию и функции отчёта на синтетических пакетах. Исполняемая CLI ещё не готова.
+Once the CLI is implemented, tests must invoke the real command and check exit codes, messages, and files against a manual oracle. Record the executed commands and results. Currently, typecheck/test/build are configured for Node.js modules; tests cover JSON reading, validation, and report functions using synthetic packages. The executable CLI is not yet ready.
 
-## Работа в паре
+## Pair work
 
-Следующий шаг — вместе прочитать один пример будущей сводки и определить полезную информацию. Потом разобрать данные, из которых она собирается, и написать один небольшой фрагмент. Эта спецификация не поручает автоматически реализовать всё за один ход.
+The next step is to read one example of the future summary together and identify useful information. Then review the data used to build it and write one small fragment. This specification does not authorize implementing everything automatically in a single step.

@@ -1,0 +1,23 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  SNAPSHOTS["git/snapshots.ts<br/>merge-base and head: two snapshots"] --> CHANGES
+  SNAPSHOTS --> SCAN
+  CHANGES["git/changes.ts<br/>added, modified, deleted, renamed"] --> DIFF
+  SCAN["analysis/scan.ts<br/>file list for each snapshot"] --> FILTER
+  FILTER["analysis/scope.ts<br/>extensions, exclusions, limits"] --> PARSE
+  PARSE["analysis/parse.ts<br/>AST for supported JS / Flow"] --> IMPORTS
+  PARSE -->|"unsupported syntax"| DIAGNOSTICS
+  IMPORTS["analysis/imports.ts<br/>import, export-from, literal import/require<br/>type-only handled separately"] --> RESOLVE
+  IMPORTS -->|"computed path"| DIAGNOSTICS
+  RESOLVE["analysis/resolve.ts<br/>relative path / configured alias"] --> CLASSIFY
+  CLASSIFY["analysis/classify.ts<br/>internal / external / excluded / unresolved"] -->|"internal file"| EDGES
+  CLASSIFY -->|"limitations and reasons"| DIAGNOSTICS
+  EDGES["Edge[]<br/>from, to, kind, specifier, line"] --> INDEX
+  INDEX["graph/index.ts<br/>imports / imported by"] --> DIFF
+  INDEX --> CYCLES
+  INDEX --> IMPACT
+  DIFF["graph/compare.ts<br/>added and removed edges"] --> RESULT
+  CYCLES["graph/cycles.ts<br/>cycles before and after the change"] --> RESULT
+  IMPACT["graph/impact.ts<br/>reverse traversal, depth, no duplicates"] --> RESULT
+  DIAGNOSTICS["Diagnostic[]<br/>reason, file, line, analysis completeness"] --> RESULT
+  RESULT["AnalysisResult<br/>files, graphs, changes, limitations"]

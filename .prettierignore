@@ -1,0 +1,12 @@
+# Generated diagrams and package-manager output
+diagrams/*.svg
+diagrams/*.png
+diagrams/*.excalidraw
+pnpm-lock.yaml
+
+# Local artifacts
+.context/
+.gstack/
+dist/
+test-results/
+playwright-report/

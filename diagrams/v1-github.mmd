@@ -1,0 +1,16 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  EVENT["pull_request<br/>opened / synchronize / reopened"] --> CONTEXT
+  CONTEXT["Step: prepare input<br/>base SHA, head SHA, PR, run ID"] --> REPO
+  CONTEXT -->|"proof of work only: no source reading needed"| TOOL
+  REPO["Step: fetch snapshots<br/>history for merge-base; read-only sources"] --> TOOL
+  TOOL["Step: prepare our CLI<br/>pinned tool version"] --> CLI
+  RESULTS["Existing check process<br/>executed using project configuration"] --> EVIDENCE
+  EVIDENCE["Results adapter<br/>ci-results.json + attachments"] --> CLI
+  CLI["Step: run our command<br/>analysis and/or proof of work"] --> OUTPUT
+  OUTPUT["report/ + exit code<br/>including available diagnostics"] --> SUMMARY
+  OUTPUT --> UPLOAD
+  SUMMARY["Step: job summary<br/>summary.md contents"]
+  UPLOAD["Step: upload artifact<br/>report directory; attempt and head SHA"] --> ARTIFACT
+  ARTIFACT["Actions run artifact<br/>downloadable directory"] --> VIEW
+  VIEW["Reviewer<br/>download → show-report → inspect"]

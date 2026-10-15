@@ -1,0 +1,22 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":25,"rankSpacing":35},"themeVariables":{"fontSize":"15px"}}}%%
+flowchart TD
+  INPUT["ReportData<br/>context, diagnostics, available modules"] --> VALIDATE
+  VALIDATE["contracts/report.ts<br/>validate shared contract"] --> JSON
+  VALIDATE --> MARKDOWN
+  VALIDATE --> HTML
+  VALIDATE --> FILES
+  JSON["report/json.ts<br/>machine-readable result"] --> JSONFILE
+  JSONFILE["report.json"]
+  MARKDOWN["report/markdown.ts<br/>brief PR summary"] --> MDFILE
+  MDFILE["summary.md"]
+  HTML["report/html.ts<br/>template + safely embedded data"] --> MAP
+  HTML --> PROOF
+  HTML --> WARNINGS
+  MAP["report/assets/map.js<br/>node selection, edges, search<br/>only when analysis is available"] --> DIRECTORY
+  PROOF["report/assets/evidence.js<br/>criteria, statuses, evidence viewer<br/>works without a map"] --> DIRECTORY
+  WARNINGS["report/assets/diagnostics.js<br/>errors, skips, partial data"] --> DIRECTORY
+  FILES["report/copy-artifacts.ts<br/>copy attachments using the manifest"] --> DIRECTORY
+  JSONFILE --> DIRECTORY
+  MDFILE --> DIRECTORY
+  DIRECTORY["Report directory<br/>JSON + Markdown + HTML<br/>assets + attachments"] --> OPEN
+  OPEN["cli/show-report.ts<br/>serve directory locally and open browser"]

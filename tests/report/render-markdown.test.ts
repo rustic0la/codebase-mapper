@@ -4,9 +4,6 @@ import { renderMarkdown } from "../../src/report/render-markdown.js";
 import { syntheticInput } from "../helpers/input.js";
 
 describe("renderMarkdown", () => {
-  // Value: protects=readable source-attributed Markdown with honest scope and dependency kinds;
-  // fails_when=paths resolve by path instead of ID, links use the wrong SHA or lists coerce to commas;
-  // why_new=no persistent test covers Markdown output or source URL encoding; seam=none
   it("renders file paths, source links, classifications and separate limitation and warning lists", () => {
     const report = createReport(syntheticInput());
     const before = structuredClone(report);
@@ -39,9 +36,6 @@ describe("renderMarkdown", () => {
     expect(report).toEqual(before);
   });
 
-  // Value: protects=explicit empty output and errors instead of links to nonexistent files;
-  // fails_when=empty arrays leave ambiguous output or dangling endpoints print undefined;
-  // why_new=the populated valid fixture cannot exercise fallbacks or endpoint guards; seam=none
   it("handles empty results and rejects missing source or target files", () => {
     const emptyInput = syntheticInput();
     emptyInput.files = [];
@@ -62,9 +56,6 @@ describe("renderMarkdown", () => {
     }
   });
 
-  // Value: protects=source references and reporter-owned structure with imported text;
-  // fails_when=URL query/hash survives in blob links or field Markdown creates report headings;
-  // why_new=ordinary paths and single-line prose cannot expose these boundary defects; seam=none
   it("canonicalizes source URLs and renders imported Markdown as literal text", () => {
     const input = syntheticInput();
     input.repository =

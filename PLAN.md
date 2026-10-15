@@ -43,7 +43,7 @@ Detailed module diagrams, inputs and outputs, and the proposed file structure: [
 
 | Part      | Responsibility                                                               | Initial choice                                                                  |
 | --------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| CLI       | Arguments, errors, orchestration, output files                               | Node.js + TypeScript; argument library selection is deferred                    |
+| CLI       | Arguments, errors, orchestration, output files                               | Node.js + TypeScript; built-in `node:util` argument parsing                     |
 | Contracts | Versions and validation for analysis, review, and evidence                   | JSON; current validation is manual, with Zod still planned                      |
 | Parser    | Files, imports, path resolution, evidence for edges                          | Choose after testing Flow syntax on React; do not assume ts-morph supports Flow |
 | Graph     | Indexes, traversal, cycles, snapshot comparison                              | Pure TypeScript functions                                                       |
@@ -53,7 +53,7 @@ Detailed module diagrams, inputs and outputs, and the proposed file structure: [
 
 The parser is independent of HTML, React, AI, and the GitHub API. Reporters do not duplicate graph algorithms. HTML reads the completed result without analyzing the repository again. A portable report includes its assets in the report directory; reading saved data does not require network access. If the chosen implementation requires local serving, add a `show-report` command and document it explicitly.
 
-The early Vite/React scaffold has been removed. package.json and configuration files now target Node.js modules: TypeScript compilation and Vitest tests. The executable CLI and HTML reporter are not implemented yet; the HTML technology remains undecided.
+The early Vite/React scaffold has been removed. package.json and configuration files now target Node.js modules: TypeScript compilation and Vitest tests. The executable CLI validates a supplied JSON package and writes JSON and Markdown reports. Source analysis, the reference React package, and the HTML reporter are not implemented yet; the HTML technology remains undecided.
 
 ## 5. Stages
 
@@ -66,6 +66,8 @@ Define one reference input and its expected output together. Use a real subset o
 ### Stage 1. CLI and text report
 
 The first small result: a command accepts reference JSON and an output directory, validates the input, and creates `report.json` and `summary.md`. This is the first reporter; source analysis comes in later tasks. Describe arguments, messages, and exit codes before implementation.
+
+The command is implemented as `node dist/cli.js --input <input.json> --out <output-directory>` after `pnpm build`. It exits with `0` after both reports are written, including for a valid partial package with warnings. Argument, reading, validation, and writing errors produce an error in stderr and exit code `1`. Report writes are sequential; a failed Markdown write can leave the JSON report on disk. The eight CLI tests use synthetic packages; the manual React reference package remains to be prepared.
 
 **Acceptance:** valid input produces the expected files and summary; malformed JSON, an unknown version, a missing file, and a write failure produce clear errors. Supported warnings are distinguished from an inability to perform analysis.
 
@@ -85,7 +87,7 @@ Generate a portable HTML report from the same result. The map is central, with a
 
 ### Stage 4. Proof of work
 
-Accept a task package and results of checks already performed using the protocol in [WORKSHOP-NOTES.md](./WORKSHOP-NOTES.md#proof-of-work-protocol-for-the-product). Distinguish outcome, source, and snapshot freshness. Show missing evidence and uncovered criteria.
+Accept a task package and results of checks already performed. Distinguish outcome, source, and snapshot freshness. Show missing evidence and uncovered criteria.
 
 The CLI does not run commands from imported reports or execute scripts from the analyzed repository. Test results come from an existing, explicitly configured CI process. Integration with a particular format, such as Playwright, is a separate task. Linking evidence to a file does not prove full test coverage.
 
@@ -107,13 +109,13 @@ Add AI explanations and AI review under a separate specification after the pipel
 
 One step produces one clear result. First explain the input, output, and reason for the decision; the user participates in understanding the data and code. Then implement a single part, run checks, and discuss the result. The overall plan does not instruct the agent to complete an entire stage automatically.
 
-The first step is now the data and text for one CLI report. React component state is not the project's next step. Current specification: [specs/001-review-prototype.md](./specs/001-review-prototype.md).
+The JSON-to-report CLI and its process tests are implemented. The manual React input and expected summary remain to be reviewed together before moving to source analysis. Current specification: [specs/001-review-prototype.md](./specs/001-review-prototype.md).
 
 ## 7. Checks and evidence
 
 For the parser, preserve a manual expected result, the actual result, and a diff; for the CLI, preserve arguments, stdout/stderr, exit code, and output files; for HTML, preserve the browser scenario and trace. Checks for our tool run separately from the analyzed repository. Explain changes to reference data and checks.
 
-`pnpm typecheck`, `pnpm test`, and `pnpm build` now target the Node.js project and check the implemented reading, validation, and report modules. Tests use synthetic packages; the executable CLI and reference React package are not implemented yet. Introduce Playwright with the HTML reporter. Preserve actually executed commands and their results separately from demo data.
+`pnpm typecheck`, `pnpm test`, and `pnpm build` target the Node.js project. `pnpm test` builds the CLI before running Vitest. The 76 tests cover the implemented modules and eight real-process CLI scenarios: missing arguments, valid input, malformed JSON, an unsupported schema version, a missing input file, a Markdown write failure, repeated runs, and unknown options. Tests use synthetic packages; the manual reference React package is not implemented yet. Introduce Playwright with the HTML reporter. Preserve actually executed commands and their results separately from demo data.
 
 ## 8. Starting references
 

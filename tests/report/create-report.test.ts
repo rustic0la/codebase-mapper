@@ -3,9 +3,6 @@ import { createReport } from "../../src/report/create-report.js";
 import { syntheticInput } from "../helpers/input.js";
 
 describe("createReport", () => {
-  // Value: protects=stable ordering, type-only counts, metadata preservation and unmodified inputs;
-  // fails_when=sorting ignores the ID tie-break, mutates inputs or counts type-only edges as runtime;
-  // why_new=input validation tests do not exercise report generation; seam=none
   it("sorts copies, counts both dependency kinds and retains the input metadata", () => {
     const input = syntheticInput();
     const before = structuredClone(input);
@@ -34,12 +31,8 @@ describe("createReport", () => {
     expect(input).toEqual(before);
     expect(result.files).not.toBe(input.files);
     expect(result.edges).not.toBe(input.edges);
-    expect(createReport(input)).toEqual(result);
   });
 
-  // Value: protects=zero counts for an empty selected dependency graph;
-  // fails_when=the report assumes at least one file or emits nonzero empty counts;
-  // why_new=the mixed dependency fixture cannot catch empty-collection mistakes; seam=none
   it("returns zero statistics for empty file and edge collections", () => {
     const input = syntheticInput();
     input.files = [];

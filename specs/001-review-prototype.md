@@ -2,13 +2,13 @@
 
 ## Product format
 
-The utility runs locally and in GitHub Actions when a PR is created or updated. It generates a report from code snapshots; later, an HTML reporter will display the graph and evidence of the agent's work. A separate React application is not the goal. The specification's filename is retained for existing links; the earlier interface prototype was replaced by this task before implementation.
+The utility is designed to run locally and in GitHub Actions when a PR is created or updated. It generates a report from code snapshots; later, an HTML reporter will display the graph and evidence of the agent's work. A separate React application is not the goal. The specification's filename is retained for existing links; the earlier interface prototype was replaced by this task before implementation.
 
 ## First small scenario
 
-The user supplies the CLI with reference JSON and an output directory. The command validates the package and creates `report.json` and a short `summary.md`. Before writing code, we review one input example and the expected summary text together. The executable command name and flags have not yet been selected.
+The user supplies the CLI with reference JSON and an output directory. The command validates the package and creates `report.json` and a short `summary.md`. After `pnpm build`, run `node dist/cli.js --input <input.json> --out <output-directory>`. Before preparing the React reference package, review its input and expected summary text together.
 
-Only the modules for JSON reading, package validation, statistics, and the Markdown summary are currently implemented. The CLI, file writing, and reference React package remain next steps; the acceptance criteria below describe the complete scenario.
+JSON reading, package validation, statistics, Markdown rendering, report file writing, and the executable CLI are implemented. Eight CLI tests invoke the built command with synthetic packages. The manually verified React reference package remains a next step; the acceptance criteria below describe the complete scenario.
 
 ## Reference data
 
@@ -23,7 +23,7 @@ Only the modules for JSON reading, package validation, statistics, and the Markd
 
 Schema version, repository URL, snapshot identifiers, file list, annotated relationships with source paths and line numbers, analysis boundaries, and warnings. Sources are linked to an exact commit. The seven files in the reference example do not mean that the entire PR is analyzed.
 
-JSON and Markdown are generated from one validated result. Distinguish successful generation of a partial report with warnings from an inability to execute the command. Define exit codes before implementation. Report generation is not evidence that the analyzed code is correct.
+JSON and Markdown are generated from one validated result. Exit code `0` means both files were written successfully, including for a valid partial package with warnings. Errors in arguments, reading, validation, or writing produce a message in stderr and exit code `1`. Files are written sequentially; a failed Markdown write can leave `report.json` on disk. Report generation is not evidence that the analyzed code is correct.
 
 ## Acceptance criteria
 
@@ -40,8 +40,8 @@ The parser, Flow and cross-package path resolution for the entire React reposito
 
 ## Evidence
 
-Once the CLI is implemented, tests must invoke the real command and check exit codes, messages, and files against a manual oracle. Record the executed commands and results. Currently, typecheck/test/build are configured for Node.js modules; tests cover JSON reading, validation, and report functions using synthetic packages. The executable CLI is not yet ready.
+`pnpm test` builds the CLI before running Vitest. The 76 tests cover JSON reading, validation, report functions, and eight real-process CLI scenarios using synthetic packages. The CLI tests check exit codes, stdout/stderr, output contents, invalid-input rejection, write failures, and stable results on repeated runs. The manually verified React input and expected output are not yet prepared. Record the executed commands and results; synthetic test results do not establish the selected React relationships.
 
 ## Pair work
 
-The next step is to read one example of the future summary together and identify useful information. Then review the data used to build it and write one small fragment. This specification does not authorize implementing everything automatically in a single step.
+Review the manual React input and expected summary together next, identifying useful information and checking each relationship against its source. Then write one small fragment and verify it. This specification does not authorize implementing everything automatically in a single step.
